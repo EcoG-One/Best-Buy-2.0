@@ -93,11 +93,12 @@ class NonStockedProduct(Product):
         super().__init__(name, price, quantity=0)
 
     def show(self) -> str:
-
-        return f"{self.name}, Price: {self.price}, Quantity: Unlimited"
+        promotion_info = f", Promotion: {self.promotion.name}" if self.promotion else ""
+        return f"{self.name}, Price: {self.price}, Quantity: Unlimited{promotion_info}"
 
     def buy(self, quantity: int) -> float:
-
+        if self.promotion:
+            return self.promotion.apply_promotion(self, quantity)
         return self.price * quantity
 
 class LimitedProduct(Product):
@@ -107,8 +108,8 @@ class LimitedProduct(Product):
         self.maximum = maximum
 
     def show(self) -> str:
-
-        return f"{self.name}, Price: {self.price}, Quantity: {self.quantity}, Maximum: {self.maximum}"
+        promotion_info = f", Promotion: {self.promotion.name}" if self.promotion else ""
+        return f"{self.name}, Price: {self.price}, Quantity: {self.quantity}, Maximum: {self.maximum}{promotion_info}"
 
     def buy(self, quantity: int) -> float:
         if quantity > self.maximum:
