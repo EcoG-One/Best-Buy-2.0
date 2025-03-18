@@ -1,5 +1,5 @@
 
-class Product():
+class Product:
     '''
     product available in the store
       :param name: product name
@@ -87,3 +87,31 @@ class Product():
                              " Quantity larger than what exists")
         self.set_quantity(self.quantity - quantity)
         return quantity * self.price
+
+class NonStockedProduct(Product):
+    def __init__(self, name: str, price: float):
+        super().__init__(name, price, quantity=0)
+
+    def show(self) -> str:
+
+        return f"{self.name}, Price: {self.price}, Quantity: Unlimited"
+
+    def buy(self, quantity: int) -> float:
+
+        return self.price * quantity
+
+class LimitedProduct(Product):
+    def __init__(self, name: str, price: float, quantity: int,
+                 maximum: int):
+        super().__init__(name, price, quantity)
+        self.maximum = maximum
+
+    def show(self) -> str:
+
+        return f"{self.name}, Price: {self.price}, Quantity: {self.quantity}, Maximum: {self.maximum}"
+
+    def buy(self, quantity: int) -> float:
+        if quantity > self.maximum:
+            raise ValueError(
+                f"Cannot buy more than {self.maximum} items at once")
+        return super().buy(quantity)
