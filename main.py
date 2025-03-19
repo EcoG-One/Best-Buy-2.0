@@ -4,7 +4,8 @@ A program that lists the products of a store and makes orders
 '''
 
 from store import Store
-from products import Product, NonStockedProduct, LimitedProduct
+from products import (Product, NonStockedProduct, LimitedProduct,
+                      PercentageDiscount, SecondHalfPrice, BuyTwoGetOneFree)
 
 
 def print_all_products(store):
@@ -50,11 +51,15 @@ def create_shopping_list(store):
         else:
             active_products = store.get_all_products()
             if 0 <= product_index < len(active_products):
-                if active_products[product_index].get_quantity() >= amount:
-                    shopping_list.append(
-                        (active_products[product_index], amount)
-                    )
-                    print("Product added to Shopping list!\n")
+                product_to_add =  active_products[product_index]
+                if isinstance(product_to_add, NonStockedProduct) or product_to_add.get_quantity() >= amount:
+                    if isinstance(product_to_add, LimitedProduct) and amount > product_to_add.maximum:
+                        print(f"Cannot buy more than {product_to_add.maximum} items at once")
+                    else:
+                        shopping_list.append(
+                            (active_products[product_index], amount)
+                        )
+                        print("Product added to Shopping list!\n")
                 else:
                     print("Order quantity is larger than what exists."
                           "Product not added to Shopping list!\n")
@@ -108,9 +113,22 @@ def main():
         NonStockedProduct("Windows License", price=125),
         LimitedProduct("Shipping", price=10, quantity=250, maximum=1)
         ]
+    # Create promotion catalog
+    second_half_price = SecondHalfPrice("Second Half price!")
+    buy_two_get_one_free = BuyTwoGetOneFree("Buy 2, Get 1 Free!")
+    thirty_percent = PercentageDiscount("30% off!", percentage=30)
+
+    # Add promotions to products
+    product_list[0].set_promotion(second_half_price)
+    product_list[1].set_promotion(buy_two_get_one_free)
+    product_list[3].set_promotion(thirty_percent)
+
+    # Create the store with the product list
     best_buy = Store(product_list)
+    # Start the store interface
     while True:
         if start(best_buy) == '4':
+            print("Thank you for shopping at Best Buy.\nGoodbye!")
             break
 
 
