@@ -52,9 +52,12 @@ def create_shopping_list(store):
             active_products = store.get_all_products()
             if 0 <= product_index < len(active_products):
                 product_to_add =  active_products[product_index]
-                if isinstance(product_to_add, NonStockedProduct) or product_to_add.get_quantity() >= amount:
-                    if isinstance(product_to_add, LimitedProduct) and amount > product_to_add.maximum:
-                        print(f"Cannot buy more than {product_to_add.maximum} items at once")
+                if (isinstance(product_to_add, NonStockedProduct)
+                        or product_to_add.get_quantity() >= amount):
+                    if (isinstance(product_to_add, LimitedProduct)
+                            and amount > product_to_add.maximum):
+                        print(f"Cannot buy more than {product_to_add.maximum}"
+                              f" items at once")
                     else:
                         shopping_list.append(
                             (active_products[product_index], amount)

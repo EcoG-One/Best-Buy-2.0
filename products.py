@@ -4,9 +4,8 @@ class Product:
     '''
     product available in the store
       :param name: product name
-      :param  price: product price
-      :param  quantity: product quantity
-      :param  active: product condition
+      :param price: product price
+      :param quantity: product quantity
     '''
     def __init__(self, name, price, quantity):
         '''
@@ -74,9 +73,10 @@ class Product:
         :return: a string that represents the product and promotion
         '''
         if self.promotion:
-            return f"{self.name}, Price: {self.price}, Quantity: {self.quantity}. Promotion: {self.promotion.name}"
+            return (f"{self.name}, Price: {self.price}, "
+                    f"Quantity: {self.quantity}. "
+                    f"Promotion: {self.promotion.name}")
         return f"{self.name}, Price: {self.price}, Quantity: {self.quantity}"
-
 
     def buy(self, quantity):
             '''
@@ -85,96 +85,162 @@ class Product:
             Updates the quantity of the product.
             In case of a problem raises an Exception (ValueError).
             :param quantity:
-            :return:
+            :return: the total price (float) of the purchase.
             '''
             if quantity > self.quantity:
                 raise ValueError("Not enough items in stock")
 
             if self.promotion:
                 total_price = self.promotion.apply_promotion(self, quantity)
-                # For "Buy 2, Get 1 Free" promotion
-                if isinstance(self.promotion, BuyTwoGetOneFree):
-                    actual_quantity = quantity + (quantity // 2)
-                else:
-                    actual_quantity = quantity
             else:
                 total_price = self.price * quantity
-                actual_quantity = quantity
-
-            self.quantity -= actual_quantity  # Reduce the stock
+            self.quantity -= quantity  # Reduce the stock
             if self.quantity == 0:
                 self.active = False
 
             return total_price
 
     def set_promotion(self, promotion):
+        '''Setter function for promotion
+        '''
         self.promotion = promotion
 
 
 class NonStockedProduct(Product):
-    def __init__(self, name: str, price: float):
+    '''
+    Products, not physical, with unlimited stock.
+    Quantity is set to zero and always stays that way
+    '''
+    def __init__(self, name, price):
         super().__init__(name, price, quantity=0)
         self.active = True
 
-    def show(self) -> str:
+    def show(self):
+        '''
+        overrides the show method of the Product class
+        :return: a string that represents the product and promotion
+        '''
         if self.promotion:
-            return f"{self.name}, Price: {self.price}, Quantity: Unlimited. Promotion: {self.promotion.name}"
+            return (f"{self.name}, Price: {self.price}, Quantity: Unlimited. "
+                    f"Promotion: {self.promotion.name}")
         return f"{self.name}, Price: {self.price}, Quantity: Unlimited."
 
-    def buy(self, quantity: int) -> float:
+    def buy(self, quantity: int):
+        '''
+        overrides the buy method of the Product class
+        Buys a given quantity of the product.
+        Returns the total price (float) of the purchase.
+        In case of a problem raises an Exception (ValueError).
+        :param quantity:
+        :return: the total price (float) of the purchase.
+        '''
         if self.promotion:
             return self.promotion.apply_promotion(self, quantity)
         return self.price * quantity
 
 
 class LimitedProduct(Product):
+    '''
+    Products that can only be purchased limited times in an order
+    '''
     def __init__(self, name: str, price: float, quantity: int, maximum: int):
         super().__init__(name, price, quantity)
         self.maximum = maximum
 
-    def show(self) -> str:
+    def show(self):
+        '''
+       overrides the show method of the Product class
+       :return: a string that represents the product and promotion
+       '''
         if self.promotion:
-            return f"{self.name}, Price: {self.price}, Quantity: {self.quantity}, Maximum: {self.maximum}. Promotion: {self.promotion.name}"
-        return f"{self.name}, Price: {self.price}, Quantity: {self.quantity}, Maximum: {self.maximum}"
+            return (f"{self.name}, Price: {self.price}, "
+                    f"Quantity: {self.quantity}, Maximum: {self.maximum}. "
+                    f"Promotion: {self.promotion.name}")
+        return (f"{self.name}, Price: {self.price}, Quantity: {self.quantity},"
+                f" Maximum: {self.maximum}")
 
-    def buy(self, quantity: int) -> float:
+    def buy(self, quantity: int):
+        '''
+        overrides the buy method of the Product class
+        Buys a given quantity of the product,
+        only if this quantity is not bigger than the maximum allowed.
+        Returns the total price (float) of the purchase.
+        In case of a problem raises an Exception (ValueError).
+        :param quantity:
+        :return: the total price (float) of the purchase.
+        '''
         if quantity > self.maximum:
-            raise ValueError(f"Cannot buy more than {self.maximum} items at once")
+            raise ValueError(f"Cannot buy more than {self.maximum} "
+                             f"items at once")
         return super().buy(quantity)
 
 
 class Promotion(ABC):
-    def __init__(self, name: str):
+    '''
+    Abstract class for varius types of promotion
+    '''
+    def __init__(self, name):
         self.name = name
 
     @abstractmethod
-    def apply_promotion(self, product, quantity: int) -> float:
+    def apply_promotion(self, product, quantity):
+        '''
+       Abstract method to apply promotion
+       '''
         pass
 
 
 class PercentageDiscount(Promotion):
-    def __init__(self, name: str, percentage: float):
+    '''
+    Percentage discount Promotion
+    '''
+    def __init__(self, name, percentage):
         super().__init__(name)
         self.percentage = percentage
 
-    def apply_promotion(self, product, quantity: int) -> float:
+    def apply_promotion(self, product, quantity):
+        '''
+        Applies the Percentage discount Promotion
+        :param product:
+        :param quantity:
+        :return: price after applying the promotion
+        '''
         return product.price * quantity * (1 - self.percentage / 100)
 
 
 class SecondHalfPrice(Promotion):
-    def __init__(self, name: str):
+    '''
+    Second item at half price Promotion
+    '''
+    def __init__(self, name):
         super().__init__(name)
 
-    def apply_promotion(self, product, quantity: int) -> float:
+    def apply_promotion(self, product, quantity):
+        '''
+        Applies the Second item at half price Promotion
+        :param product:
+        :param quantity:
+        :return: price after applying the promotion
+        '''
         full_price_count = (quantity + 1) // 2
         half_price_count = quantity - full_price_count
-        return (full_price_count * product.price) + (half_price_count * product.price / 2)
+        return ((full_price_count * product.price)
+                + (half_price_count * product.price / 2))
 
 
 class BuyTwoGetOneFree(Promotion):
-    def __init__(self, name: str):
+    '''
+    Buy 2, get 1 free Promotion
+    '''
+    def __init__(self, name):
         super().__init__(name)
 
-    def apply_promotion(self, product, quantity: int) -> float:
+    def apply_promotion(self, product, quantity):
+        '''
+        Applies the Buy 2, get 1 free Promotion
+        :param product:
+        :param quantity:
+        :return: price after applying the promotion
+        '''
         regular_price_count = quantity - (quantity // 3)
         return product.price * regular_price_count
